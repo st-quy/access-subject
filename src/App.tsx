@@ -33,6 +33,13 @@ const App: React.FC = () => {
   const [imageUrl, setImageUrl] = useState<any>();
   const [faceImg, setImageUrl1] = useState<RcFile>();
   const [token, setToken] = useState<string>();
+  const [params, setParams] = useState({
+    name: "",
+    gender: 1,
+    face_group_id: 14,
+    store_id: 26,
+    note: "",
+  });
 
   const beforeUpload = (file: RcFile) => {
     const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/jpg";
@@ -103,24 +110,19 @@ const App: React.FC = () => {
   }, []);
 
   const onFinish = async (values: any) => {
-    const param = {
-      name: values.name,
-      gender: values.gender,
-      face_group_id: 14,
-      store_id: 26,
-      note: values.note,
-    };
-    const sign = createSign(param, token as any);
-    await axios({
-      method: "post",
-      url: "https://digieye.viotgroup.com/phpapi/accessControl/target/add",
-      data: { ...param, faceImg },
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Token: token,
-        Sign: sign as any,
-      },
-    });
+    const sign = createSign(params, token as any);
+    if (token && sign) {
+      await axios({
+        method: "post",
+        url: "https://digieye.viotgroup.com/phpapi/accessControl/target/add",
+        data: { ...params, faceImg },
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Token: token,
+          Sign: sign as any,
+        },
+      });
+    }
   };
   return (
     <div className="subject-container">
@@ -237,7 +239,11 @@ const App: React.FC = () => {
                     },
                   ]}
                 >
-                  <Input />
+                  <Input
+                    onChange={(e) => {
+                      setParams({ ...params, name: e.target.value });
+                    }}
+                  />
                 </Form.Item>
                 <Form.Item
                   required
@@ -250,20 +256,30 @@ const App: React.FC = () => {
                     },
                   ]}
                 >
-                  <Radio.Group>
+                  <Radio.Group
+                    onChange={(e) => {
+                      setParams({ ...params, gender: e.target.value });
+                    }}
+                  >
                     <Radio value={1}>Male</Radio>
                     <Radio value={2}>Female</Radio>
                   </Radio.Group>
                 </Form.Item>
                 <Form.Item name="note" label="Notes">
-                  <Input.TextArea showCount maxLength={150} />
+                  <Input.TextArea
+                    showCount
+                    maxLength={150}
+                    onChange={(e) => {
+                      setParams({ ...params, note: e.target.value });
+                    }}
+                  />
                 </Form.Item>
                 <Form.Item name="store_id" label="Select Location">
                   <Input defaultValue="Sophia Demo" disabled />
                 </Form.Item>
                 <Form.Item name="face_group_id" label="Select Group" required>
                   <Checkbox
-                    value="14"
+                    value={14}
                     style={{ lineHeight: "32px" }}
                     disabled
                     checked
@@ -272,7 +288,9 @@ const App: React.FC = () => {
                   </Checkbox>
                 </Form.Item>
                 <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-                  <Button onClick={onFinish}>Submit</Button>
+                  <Button type="primary" htmlType="submit">
+                    Submit
+                  </Button>
                 </Form.Item>
               </Form>
             </Col>
